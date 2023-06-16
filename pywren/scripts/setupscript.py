@@ -82,6 +82,20 @@ def check_bucket_exists(s3bucket):
             raise e
     return exists
 
+def check_object_exists_factory(s3bucket):
+
+    def check_object_exists(s3Key):
+        s3 = boto3.client("s3")
+        exists = True
+        try:
+            s3.head_object(Bucket=s3bucket, Key=s3Key)
+        except:
+            exists=False
+        return exists
+
+    return check_object_exists
+
+
 def create_unique_bucket_name():
     bucket_name = "{}-pywren-{}".format(get_username().lower(),
                                         random.randint(0, 999))
@@ -146,6 +160,20 @@ def interactive_setup(ctx, dryrun, suffix):
         fail_msg="{} not a valid aws region. valid regions are " + " ".join(get_lambda_regions()))
     # FIXME make sure this is a valid region
 
+    # Which runtime shall we use?
+    runtime_s3_bucket = click_validate_prompt(
+        "S3-Bucket for your runtime: ",
+        default=pywren.wrenconfig.AWS_RUNTIME_S3BUCKET_DEFAULT,
+        validate_func=check_bucket_exists,
+        fail_msg="{} does not exist. You might want to create a runtime first (https://github.com/Tratori/runtimes)."
+    )
+
+    runtime_s3_key = click_validate_prompt(
+        "S3-Key for your runtime: ",
+        default=pywren.wrenconfig.AWS_RUNTIME_S3KEY_DEFAULT,
+        validate_func=check_object_exists_factory(runtime_s3_bucket),
+        fail_msg="{} does not exist. You might want to create a runtime first (https://github.com/Tratori/runtimes)."
+    )
 
     # if config file exists, ask before overwriting
     config_filename = click_validate_prompt(
@@ -199,6 +227,8 @@ def interactive_setup(ctx, dryrun, suffix):
                lambda_role=lambda_role,
                function_name=function_name,
                bucket_prefix=bucket_pywren_prefix,
+               runtime_bucket=runtime_s3_bucket,
+               runtime_key=runtime_s3_key,
                force=True)
     if dryrun:
         click.echo("dryrun is set, not manipulating cloud state.")

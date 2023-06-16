@@ -37,6 +37,9 @@ AWS_LAMBDA_ROLE_DEFAULT = 'pywren_exec_role_1'
 AWS_LAMBDA_FUNCTION_NAME_DEFAULT = 'pywren_1'
 AWS_SQS_QUEUE_DEFAULT = 'pywren-jobs-1'
 
+AWS_RUNTIME_S3BUCKET_DEFAULT = 'pywren-runtimes-public-us-east-1'
+AWS_RUNTIME_S3KEY_DEFAULT = 'pywren.runtimes/default_3.7.meta.json'
+
 MAX_AGG_DATA_SIZE = 4e6
 
 DEFAULT_KEY_NAME = "PYWREN_DEFAULT_KEY"

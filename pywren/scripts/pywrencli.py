@@ -83,9 +83,13 @@ def get_aws_account_id(verbose=True):
               help='force overwrite an existing file')
 @click.option('--pythonver', default=pywren.runtime.version_str(sys.version_info),
               help="Python version to use for runtime")
+@click.option('--runtime_bucket', default=pywren.wrenconfig.AWS_RUNTIME_S3BUCKET_DEFAULT,
+              help="Python version to use for runtime")
+@click.option('--runtime_key', default=pywren.wrenconfig.AWS_RUNTIME_S3KEY_DEFAULT,
+              help="Python version to use for runtime")
 def create_config(ctx, force, aws_region, lambda_role, function_name, bucket_name,
-                  bucket_prefix,
-                  sqs_queue, standalone_name, pythonver):
+                  bucket_prefix, sqs_queue, standalone_name, pythonver, runtime_bucket,
+                  runtime_key):
     """
     Create a config file initialized with the defaults, and
     put it in your ~/.pywren_config
@@ -116,20 +120,20 @@ def create_config(ctx, force, aws_region, lambda_role, function_name, bucket_nam
         pythonver = '2.7'
 
     if aws_region in pywren.wrenconfig.RUNTIME_BUCKET_REGION:
-        runtime_bucket = pywren.wrenconfig.RUNTIME_BUCKET_REGION[aws_region]
+        # runtime_bucket = pywren.wrenconfig.RUNTIME_BUCKET_REGION[aws_region]
         target_ami = pywren.wrenconfig.TARGET_AMI_REGION[aws_region]
     else:
         print("WARNING: Runtime not deployed for your region")
         print("using runtime from us-west-2.")
         print("Performance may be impacted")
-        runtime_bucket = pywren.wrenconfig.RUNTIME_BUCKET_REGION['us-west-2']
+        # runtime_bucket = pywren.wrenconfig.RUNTIME_BUCKET_REGION['us-west-2']
         target_ami = pywren.wrenconfig.TARGET_AMI_REGION['us-west-2']
 
     default_yaml = default_yaml.replace("RUNTIME_BUCKET",
                                         runtime_bucket)
-    k = pywren.wrenconfig.default_runtime[pythonver]
+    #k = pywren.wrenconfig.default_runtime[pythonver]
 
-    default_yaml = default_yaml.replace("RUNTIME_KEY", k)
+    default_yaml = default_yaml.replace("RUNTIME_KEY", runtime_key)#k)
 
     default_yaml = default_yaml.replace("TARGET_AMI", target_ami)
 
@@ -328,7 +332,7 @@ def deploy_lambda(ctx, update_if_exists=True):
 
                 lambclient.create_function(FunctionName=FUNCTION_NAME,
                                            Handler=pywren.wrenconfig.AWS_LAMBDA_HANDLER_NAME,
-                                           Runtime="python2.7",
+                                           Runtime="python3.7",
                                            MemorySize=MEMORY,
                                            Timeout=TIMEOUT,
                                            Role=ROLE,

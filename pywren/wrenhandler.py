@@ -35,8 +35,11 @@ import botocore
 
 if sys.version_info > (3, 0):
     from queue import Queue, Empty # pylint: disable=import-error
-    from . import wrenutil # pylint: disable=relative-import
-    from . import version  # pylint: disable=relative-import
+    try:
+        import wrenutil
+        import version
+    except:
+        from pywren import wrenutil, version
 
 else:
     from Queue import Queue, Empty # pylint: disable=import-error
@@ -55,11 +58,12 @@ TEMP = tempfile.gettempdir()
 PYTHON_MODULE_PATH = os.path.join(TEMP, "pymodules_{0}")
 CONDA_RUNTIME_DIR = os.path.join(TEMP, "condaruntime_{0}")
 RUNTIME_LOC = os.path.join(TEMP, "runtimes")
-
 # these templates will get fillled by PID
 JOBRUNNER_CONFIG_FILENAME = os.path.join(TEMP, "jobrunner_{0}.config.json")
 JOBRUNNER_STATS_FILENAME = os.path.join(TEMP, "jobrunner_{0}.stats.txt")
 RUNTIME_DOWNLOAD_LOCK = os.path.join(TEMP, "runtime_download_lock")
+
+LAST_SAVED_RUNTIME = None
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +180,8 @@ def download_runtime_if_necessary(s3_client, runtime_s3_bucket, runtime_s3_key,
         shutil.rmtree(runtime_etag_dir, True)
         raise
 
+    global LAST_SAVED_RUNTIME
+    LAST_SAVED_RUNTIME= runtime_etag_dir
     # final operation
     os.symlink(expected_target, conda_runtime_dir)
     file_unlock(lock)
@@ -339,7 +345,8 @@ def generic_handler(event, context_dict, custom_handler_env=None):
         if os.path.exists(jobrunner_stats_filename):
             os.remove(jobrunner_stats_filename)
 
-        cmdstr = "{} {} {}".format(conda_python_runtime,
+        runtime_python = os.path.join(os.path.join(LAST_SAVED_RUNTIME, "bin"), "python")
+        cmdstr = "{} {} {}".format(runtime_python,
                                    jobrunner_path,
                                    jobrunner_config_filename)
 
