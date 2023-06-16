@@ -328,7 +328,7 @@ def deploy_lambda(ctx, update_if_exists=True):
 
                 lambclient.create_function(FunctionName=FUNCTION_NAME,
                                            Handler=pywren.wrenconfig.AWS_LAMBDA_HANDLER_NAME,
-                                           Runtime="python2.7",
+                                           Runtime="python3.7",
                                            MemorySize=MEMORY,
                                            Timeout=TIMEOUT,
                                            Role=ROLE,
